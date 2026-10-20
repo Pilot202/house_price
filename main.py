@@ -1,14 +1,15 @@
 from fastapi import FastAPI
 from pydantic import BaseModel  
 import pickle
-import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+import numpy as np
+# import request 
+
 #initialize the app 
 app = FastAPI()
 
 # Define our data structures 
-#bedrooms	bathrooms	toilets	parking_space	title	town	state	price
+# Define the prediction request fields. Price is the value being predicted.
 class HouseData(BaseModel):
     bedrooms: int
     bathrooms: int
@@ -17,13 +18,6 @@ class HouseData(BaseModel):
     title: str
     town: str
     state: str
-    price: float
-
-
-
-
-
-
 
 # load the pretrained model 
 with open('rf_model.pkl', 'rb') as f:
@@ -33,18 +27,34 @@ with open('rf_model.pkl', 'rb') as f:
 def home():
     return {"message": "Welcome to the House Price Prediction API!"}
 
+
+
+
+
+
+
+
 @app.post("/predict")
 def predict_price(data: HouseData):
-    # convert data to a DataFrame
     input_data = pd.DataFrame([data.dict()])
-    # scale the input data
-    scaler = StandardScaler()
-    input_data_scaled = scaler.fit_transform(input_data[['bedrooms', 'bathrooms', 'toilets', 'parking_space']])
+    encoded_input = pd.get_dummies(
+        input_data,
+        columns=["title", "town", "state"],
+    )
 
-    # make prediction
-    prediction = model.predict(input_data_scaled)
+    training_features = getattr(model, "feature_names_in_", None)
+    if training_features is None:
+        raise ValueError(
+            "The saved model has no training feature names. Retrain and save it "
+            "with the encoded training DataFrame."
+        )
 
-    return {"predicted_price": prediction[0]}
+    encoded_input = encoded_input.reindex(columns=training_features, fill_value=0)
+    log_price_pred = model.predict(encoded_input)[0]
+    return {"predicted_price": float(np.exp(log_price_pred))}
+
+
+    
 
 
 

@@ -72,7 +72,7 @@ if st.button("Predict Price"):
         "title": house_title,
         "town": town,
         "state": state,
-        "price": 0.0  # Placeholder, as price is not needed for prediction
+        
     }
 
     try:
@@ -80,3 +80,8 @@ if st.button("Predict Price"):
         response = requests.post("http://127.0.0.1:8001/predict", json=data)
     except requests.RequestException as e:
         st.error(f"Error occurred while making the API request: {e}")
+
+    if response.status_code == 200:
+        result = response.json()
+        predicted_price = result.get("predicted_price")
+        st.success(f"The predicted price of the house is: #{predicted_price:,.2f}")
