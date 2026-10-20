@@ -77,7 +77,7 @@ if st.button("Predict Price"):
 
     try:
         # Send a POST request to the FastAPI endpoint
-        response = requests.post("http://127.0.0.1:8001/predict", json=data)
+        response = requests.post("https://house-price-5nj2.onrender.com/predict", json=data)
     except requests.RequestException as e:
         st.error(f"Error occurred while making the API request: {e}")
 
